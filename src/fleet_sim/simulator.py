@@ -68,7 +68,7 @@ def main() -> None:
     vehicle_x = 0
     vehicle_y = 0
     vehicle_id = 1
-    vehicle_battery = 20
+    vehicle_battery = 10
     # vehicle_battery_capacity = 100
     vehicle_status = "idle"
 
