@@ -147,7 +147,8 @@ def main() -> None:
 
         else:
             print(
-                "The vehicle does not have enough battery to reach the charging station."
+                "The vehicle does not have enough battery "
+                "to reach the charging station."
             )
             print("The vehicle is stranded.")
             vehicle_status = "stranded"
