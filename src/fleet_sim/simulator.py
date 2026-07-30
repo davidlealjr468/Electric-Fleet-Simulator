@@ -91,9 +91,7 @@ def main() -> None:
     )
 
     required_battery = (
-        distance_to_pickup
-        + distance_pickup_to_dropoff
-        + distance_dropoff_to_charger
+        distance_to_pickup + distance_pickup_to_dropoff + distance_dropoff_to_charger
     )
 
     vehicle_status = "to_pickup"
@@ -101,12 +99,7 @@ def main() -> None:
     if vehicle_battery >= required_battery:
         print("The vehicle has enough battery to accept the trip.")
         vehicle_x, vehicle_y, current_time, vehicle_battery = move_vehicle_to(
-            vehicle_x,
-            vehicle_y,
-            pickup_x,
-            pickup_y,
-            current_time,
-            vehicle_battery
+            vehicle_x, vehicle_y, pickup_x, pickup_y, current_time, vehicle_battery
         )
 
         print("The vehicle reached the passenger.")
@@ -115,11 +108,11 @@ def main() -> None:
 
         vehicle_x, vehicle_y, current_time, vehicle_battery = move_vehicle_to(
             vehicle_x,
-        vehicle_y,
-        dropoff_x,
-        dropoff_y,
-        current_time,
-        vehicle_battery,
+            vehicle_y,
+            dropoff_x,
+            dropoff_y,
+            current_time,
+            vehicle_battery,
         )
 
         print("The passenger reached the drop-off location.")
@@ -134,7 +127,6 @@ def main() -> None:
 
     else:
         print("The vehicle does not have enough battery to accept the trip")
-
 
     print(f"Time: {current_time}")
     print(f"Vehicle ID: {vehicle_id}")
