@@ -37,6 +37,23 @@ def move_vehicle_to(
 
     return vehicle_x, vehicle_y, current_time, vehicle_battery
 
+def charge_vehicle(
+    vehicle_battery,
+    charging_target,
+    charging_rate,
+    current_time,
+):
+    """Charge a vehicle to a target level and update simulation time."""
+    while charging_target > vehicle_battery:
+        vehicle_battery = min(
+            vehicle_battery + charging_rate,
+            charging_target,
+        )
+
+        current_time += 1
+        print(f"Time {current_time}: vehicle charged to {vehicle_battery}")
+    return vehicle_battery, current_time
+    
 
 def manhattan_distance(x1, y1, x2, y2):
     """Calculate Manhattan distance between two points."""
@@ -50,7 +67,8 @@ def main() -> None:
     vehicle_x = 0
     vehicle_y = 0
     vehicle_id = 1
-    vehicle_battery = 100
+    vehicle_battery = 20
+    vehicle_battery_capacity = 100
     vehicle_status = "idle"
 
     pickup_x = 7
@@ -61,6 +79,8 @@ def main() -> None:
 
     charging_station_x = 4
     charging_station_y = 2
+    charging_rate = 5 #Units per time step
+    charging_target = 80
 
     distance_to_pickup = manhattan_distance(
         vehicle_x,
@@ -139,6 +159,16 @@ def main() -> None:
 
             print("The vehicle reached the charging station.")
             vehicle_status = "charging"
+
+            vehicle_battery, current_time = charge_vehicle(
+                vehicle_battery,
+                charging_target,
+                charging_rate,
+                current_time,
+            )
+
+            print("The vehicle finished charging.")
+            vehicle_status = "idle"
 
         else:
             print(
