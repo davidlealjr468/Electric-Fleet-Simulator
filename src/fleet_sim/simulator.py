@@ -76,16 +76,16 @@ def main() -> None:
         dropoff_y,
     )
 
-    distance_to_charger = manhattan_distance(
-        vehicle_x,
-        vehicle_y,
+    distance_dropoff_to_charger = manhattan_distance(
+        dropoff_x,
+        dropoff_y,
         charging_station_x,
         charging_station_y,
     )
 
-    distance_dropoff_to_charger = manhattan_distance(
-        dropoff_x,
-        dropoff_y,
+    distance_to_charger = manhattan_distance(
+        vehicle_x,
+        vehicle_y,
         charging_station_x,
         charging_station_y,
     )
@@ -94,10 +94,11 @@ def main() -> None:
         distance_to_pickup + distance_pickup_to_dropoff + distance_dropoff_to_charger
     )
 
-    vehicle_status = "to_pickup"
-
     if vehicle_battery >= required_battery:
         print("The vehicle has enough battery to accept the trip.")
+
+        vehicle_status = "to_pickup"
+
         vehicle_x, vehicle_y, current_time, vehicle_battery = move_vehicle_to(
             vehicle_x, vehicle_y, pickup_x, pickup_y, current_time, vehicle_battery
         )
@@ -118,15 +119,9 @@ def main() -> None:
         print("The passenger reached the drop-off location.")
 
         vehicle_status = "idle"
-        distance_to_charger = manhattan_distance(
-            vehicle_x,
-            vehicle_y,
-            charging_station_x,
-            charging_station_y,
-        )
 
     else:
-        print("The vehicle does not have enough battery to accept the trip")
+        print("The vehicle does not have enough battery to accept the trip.")
 
         if vehicle_battery >= distance_to_charger:
             print("The vehicle has enough battery to reach the charging station.")
@@ -152,6 +147,13 @@ def main() -> None:
             )
             print("The vehicle is stranded.")
             vehicle_status = "stranded"
+
+    distance_to_charger = manhattan_distance(
+        vehicle_x,
+        vehicle_y,
+        charging_station_x,
+        charging_station_y,
+    )
 
     print(f"Time: {current_time}")
     print(f"Vehicle ID: {vehicle_id}")
