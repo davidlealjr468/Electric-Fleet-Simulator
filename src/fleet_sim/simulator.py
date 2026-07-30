@@ -128,6 +128,28 @@ def main() -> None:
     else:
         print("The vehicle does not have enough battery to accept the trip")
 
+        if vehicle_battery >= distance_to_charger:
+            print("The vehicle has enough battery to reach the charging station.")
+
+            vehicle_status = "to_charger"
+
+            vehicle_x, vehicle_y, current_time, vehicle_battery = move_vehicle_to(
+                vehicle_x,
+                vehicle_y,
+                charging_station_x,
+                charging_station_y,
+                current_time,
+                vehicle_battery,
+            )
+
+            print("The vehicle reached the charging station.")
+            vehicle_status = "charging"
+
+        else:
+            print("The vehicle does not have enough battery to reach the charging station.")
+            print("The vehicle is stranded.")
+            vehicle_status = "stranded"
+
     print(f"Time: {current_time}")
     print(f"Vehicle ID: {vehicle_id}")
     print(f"Vehicle position: ({vehicle_x}, {vehicle_y})")
