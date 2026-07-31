@@ -1,86 +1,9 @@
 """Base electric fleet simulator."""
 
-
-def move_vehicle_to(
-    vehicle_x,
-    vehicle_y,
-    target_x,
-    target_y,
-    current_time,
-    vehicle_battery,
-):
-    """Move a vehicle and update position, time, and battery."""
-
-    while target_x > vehicle_x:
-        vehicle_x += 1
-        current_time += 1
-        vehicle_battery -= 1
-        print(f"Time {current_time}: vehicle moved right to ({vehicle_x}, {vehicle_y})")
-
-    while target_x < vehicle_x:
-        vehicle_x -= 1
-        current_time += 1
-        vehicle_battery -= 1
-        print(f"Time {current_time}: vehicle moved left to ({vehicle_x}, {vehicle_y})")
-
-    while target_y > vehicle_y:
-        vehicle_y += 1
-        current_time += 1
-        vehicle_battery -= 1
-        print(f"Time {current_time}: vehicle moved up to ({vehicle_x}, {vehicle_y})")
-
-    while target_y < vehicle_y:
-        vehicle_y -= 1
-        current_time += 1
-        vehicle_battery -= 1
-        print(f"Time {current_time}: vehicle moved down to ({vehicle_x}, {vehicle_y})")
-
-    return vehicle_x, vehicle_y, current_time, vehicle_battery
-
-
-def charge_vehicle(
-    vehicle_battery,
-    charging_target,
-    charging_rate,
-    current_time,
-):
-    """Charge a vehicle to a target level and update simulation time."""
-    while charging_target > vehicle_battery:
-        vehicle_battery = min(
-            vehicle_battery + charging_rate,
-            charging_target,
-        )
-
-        current_time += 1
-        print(f"Time {current_time}: vehicle charged to {vehicle_battery}")
-    return vehicle_battery, current_time
-
-
-def manhattan_distance(x1, y1, x2, y2):
-    """Calculate Manhattan distance between two points."""
-    return abs(x1 - x2) + abs(y1 - y2)
-
-
-def find_nearest_charging_station(vehicle_x, vehicle_y, charging_stations):
-    """Find the nearest charging station to the vehicle's current position."""
-    nearest_station = None
-    nearest_station_distance = float("inf")
-
-    for station in charging_stations:
-        station_x, station_y = station
-
-        station_distance = manhattan_distance(
-            vehicle_x,
-            vehicle_y,
-            station_x,
-            station_y,
-        )
-
-        if station_distance < nearest_station_distance:
-            nearest_station = station
-            nearest_station_distance = station_distance
-
-    return nearest_station, nearest_station_distance
+from fleet_sim.charging import charge_vehicle
+from fleet_sim.distance import manhattan_distance
+from fleet_sim.movement import move_vehicle_to
+from fleet_sim.selection import find_nearest_charging_station
 
 
 def main() -> None:
