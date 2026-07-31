@@ -61,6 +61,28 @@ def manhattan_distance(x1, y1, x2, y2):
     return abs(x1 - x2) + abs(y1 - y2)
 
 
+def find_nearest_charging_station(vehicle_x, vehicle_y, charging_stations):
+    """Find the nearest charging station to the vehicle's current position."""
+    nearest_station = None
+    nearest_station_distance = float("inf")
+
+    for station in charging_stations:
+        station_x, station_y = station
+
+        station_distance = manhattan_distance(
+            vehicle_x,
+            vehicle_y,
+            station_x,
+            station_y,
+        )
+
+        if station_distance < nearest_station_distance:
+            nearest_station = station
+            nearest_station_distance = station_distance
+
+    return nearest_station, nearest_station_distance
+
+
 def main() -> None:
     """Run the base electric fleet simulation."""
     current_time = 0
@@ -84,30 +106,12 @@ def main() -> None:
         (1, 9),
     ]
 
-    nearest_station = None
-    nearest_station_distance = float("inf")
-
-    # Finds the nearest charging station to the vehicle's current position
-    for station_index, station in enumerate(charging_stations):
-        station_x, station_y = station
-
-        station_distance = manhattan_distance(
-            vehicle_x,
-            vehicle_y,
-            station_x,
-            station_y,
-        )
-
-        print(
-            f"Charging station {station_index + 1} at ({station_x}, {station_y})"
-            f"is {station_distance} units away."
-        )
-
-        if station_distance < nearest_station_distance:
-            nearest_station = station
-            nearest_station_distance = station_distance
-
+    nearest_station, nearest_station_distance = find_nearest_charging_station(
+        vehicle_x, vehicle_y, charging_stations
+    )
     charging_station_x, charging_station_y = nearest_station
+    distance_to_charger = nearest_station_distance
+
     print(
         f"Nearest charging station is at ({charging_station_x}, {charging_station_y})."
     )
@@ -131,13 +135,6 @@ def main() -> None:
     distance_dropoff_to_charger = manhattan_distance(
         dropoff_x,
         dropoff_y,
-        charging_station_x,
-        charging_station_y,
-    )
-
-    distance_to_charger = manhattan_distance(
-        vehicle_x,
-        vehicle_y,
         charging_station_x,
         charging_station_y,
     )
