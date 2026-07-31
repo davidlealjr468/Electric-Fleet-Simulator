@@ -10,6 +10,9 @@ def find_nearest_charging_station(
 ):
     """Find the nearest charging station to the vehicle's current position."""
 
+    if not charging_stations:
+        raise ValueError("At least one charging station is required.")
+
     nearest_station = None
     nearest_station_distance = float("inf")
 
