@@ -1,6 +1,7 @@
 import pytest
-from fleet_sim.simulator import manhattan_distance, move_vehicle_to
+
 from fleet_sim.selection import find_nearest_charging_station
+from fleet_sim.simulator import manhattan_distance, move_vehicle_to
 
 
 def test_find_nearest_charging_station():
@@ -18,7 +19,20 @@ def test_find_nearest_charging_station():
 
     assert station == (4, 2)
     assert distance == 6
-    
+
+
+def test_find_nearest_charging_station_requires_stations():
+    with pytest.raises(
+        ValueError,
+        match="At least one charging station is required.",
+    ):
+        find_nearest_charging_station(
+            0,
+            0,
+            [],
+        )
+
+
 def test_manhattan_distance() -> None:
     distance = manhattan_distance(0, 0, 7, 6)
 
