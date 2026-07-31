@@ -2,6 +2,7 @@
 
 from fleet_sim.charging import charge_vehicle
 from fleet_sim.distance import manhattan_distance
+from fleet_sim.models import Vehicle
 from fleet_sim.movement import move_vehicle_to
 from fleet_sim.selection import find_nearest_charging_station
 
@@ -10,12 +11,12 @@ def main() -> None:
     """Run the base electric fleet simulation."""
     current_time = 0
 
-    vehicle_x = 0
-    vehicle_y = 0
-    vehicle_id = 1
-    vehicle_battery = 10
-    # vehicle_battery_capacity = 100
-    vehicle_status = "idle"
+    vehicle = Vehicle(
+        vehicle_id=1,
+        x=0,
+        y=0,
+        battery=10,
+    )
 
     pickup_x = 7
     pickup_y = 6
@@ -30,7 +31,7 @@ def main() -> None:
     ]
 
     nearest_station, nearest_station_distance = find_nearest_charging_station(
-        vehicle_x, vehicle_y, charging_stations
+        vehicle.x, vehicle.y, charging_stations
     )
     charging_station_x, charging_station_y = nearest_station
     distance_to_charger = nearest_station_distance
@@ -42,8 +43,8 @@ def main() -> None:
     charging_target = 80
 
     distance_to_pickup = manhattan_distance(
-        vehicle_x,
-        vehicle_y,
+        vehicle.x,
+        vehicle.y,
         pickup_x,
         pickup_y,
     )
@@ -66,61 +67,63 @@ def main() -> None:
         distance_to_pickup + distance_pickup_to_dropoff + distance_dropoff_to_charger
     )
 
-    if vehicle_battery >= required_battery:
+    current_time = move_vehicle_to(vehicle, pickup_x, pickup_y, current_time)
+
+    if vehicle.battery >= required_battery:
         print("The vehicle has enough battery to accept the trip.")
 
-        vehicle_status = "to_pickup"
+        vehicle.status = "to_pickup"
 
-        vehicle_x, vehicle_y, current_time, vehicle_battery = move_vehicle_to(
-            vehicle_x, vehicle_y, pickup_x, pickup_y, current_time, vehicle_battery
+        vehicle.x, vehicle.y, current_time, vehicle.battery = move_vehicle_to(
+            vehicle.x, vehicle.y, pickup_x, pickup_y, current_time, vehicle.battery
         )
 
         print("The vehicle reached the passenger.")
 
-        vehicle_status = "with_passenger"
+        vehicle.status = "with_passenger"
 
-        vehicle_x, vehicle_y, current_time, vehicle_battery = move_vehicle_to(
-            vehicle_x,
-            vehicle_y,
+        vehicle.x, vehicle.y, current_time, vehicle.battery = move_vehicle_to(
+            vehicle.x,
+            vehicle.y,
             dropoff_x,
             dropoff_y,
             current_time,
-            vehicle_battery,
+            vehicle.battery,
         )
 
         print("The passenger reached the drop-off location.")
 
-        vehicle_status = "idle"
+        vehicle.status = "idle"
 
     else:
         print("The vehicle does not have enough battery to accept the trip.")
 
-        if vehicle_battery >= distance_to_charger:
+        if vehicle.battery >= distance_to_charger:
             print("The vehicle has enough battery to reach the charging station.")
 
-            vehicle_status = "to_charger"
+            vehicle.status = "to_charger"
 
-            vehicle_x, vehicle_y, current_time, vehicle_battery = move_vehicle_to(
-                vehicle_x,
-                vehicle_y,
+            vehicle.x, vehicle.y, current_time, vehicle.battery = move_vehicle_to(
+                vehicle.x,
+                vehicle.y,
                 charging_station_x,
                 charging_station_y,
                 current_time,
-                vehicle_battery,
+                vehicle.battery,
             )
 
             print("The vehicle reached the charging station.")
-            vehicle_status = "charging"
+            vehicle.status = "charging"
 
-            vehicle_battery, current_time = charge_vehicle(
-                vehicle_battery,
+            vehicle.battery, current_time = charge_vehicle(
+                vehicle.battery,
                 charging_target,
                 charging_rate,
                 current_time,
             )
 
             print("The vehicle finished charging.")
-            vehicle_status = "idle"
+            vehicle.status = "idle"
 
         else:
             print(
@@ -128,20 +131,20 @@ def main() -> None:
                 "to reach the charging station."
             )
             print("The vehicle is stranded.")
-            vehicle_status = "stranded"
+            vehicle.status = "stranded"
 
     distance_to_charger = manhattan_distance(
-        vehicle_x,
-        vehicle_y,
+        vehicle.x,
+        vehicle.y,
         charging_station_x,
         charging_station_y,
     )
 
     print(f"Time: {current_time}")
-    print(f"Vehicle ID: {vehicle_id}")
-    print(f"Vehicle position: ({vehicle_x}, {vehicle_y})")
-    print(f"Vehicle Status: {vehicle_status}")
-    print(f"Battery Level: {vehicle_battery}")
+    print(f"Vehicle ID: {vehicle.vehicle_id}")
+    print(f"Vehicle position: ({vehicle.x}, {vehicle.y})")
+    print(f"Vehicle Status: {vehicle.status}")
+    print(f"Battery Level: {vehicle.battery}")
     print(f"Required Battery: {required_battery}")
     print(f"Distance to pickup: {distance_to_pickup}")
     print(f"Distance to charging station: {distance_to_charger}")
