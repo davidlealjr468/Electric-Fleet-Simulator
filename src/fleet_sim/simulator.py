@@ -2,6 +2,7 @@
 
 from fleet_sim.charging import charge_vehicle
 from fleet_sim.distance import manhattan_distance
+from fleet_sim.models import Vehicle
 from fleet_sim.movement import move_vehicle_to
 from fleet_sim.selection import find_nearest_charging_station
 
@@ -10,12 +11,18 @@ def main() -> None:
     """Run the base electric fleet simulation."""
     current_time = 0
 
-    vehicle_x = 0
-    vehicle_y = 0
-    vehicle_id = 1
-    vehicle_battery = 10
-    # vehicle_battery_capacity = 100
-    vehicle_status = "idle"
+    vehicle = Vehicle(
+        vehicle_id=1,
+        x=0,
+        y=0,
+        battery=10,
+    )
+
+    vehicle_id = vehicle.vehicle_id
+    vehicle_x = vehicle.x
+    vehicle_y = vehicle.y
+    vehicle_battery = vehicle.battery
+    vehicle_status = vehicle.status
 
     pickup_x = 7
     pickup_y = 6
