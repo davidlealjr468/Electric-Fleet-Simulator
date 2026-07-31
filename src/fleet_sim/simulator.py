@@ -160,10 +160,7 @@ def main() -> None:
     print(f"Distance from pickup to drop-off: {distance_pickup_to_dropoff}")
     print(f"Distance from drop-off to charging station: {distance_dropoff_to_charger}")
     print(f"Distance to charging station: {distance_to_charger}")
-    print(
-        f"Charging station position: "
-        f"({charging_station_x}, {charging_station_y})"
-    )
+    print(f"Charging station position: ({charging_station_x}, {charging_station_y})")
 
 
 if __name__ == "__main__":
