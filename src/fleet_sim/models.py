@@ -24,3 +24,13 @@ class PassengerRequest:
     dropoff_x: int
     dropoff_y: int
     status: str = "waiting"
+
+
+@dataclass
+class ChargingStation:
+    """Represent an electric-vehicle charging station."""
+
+    station_id: int
+    x: int
+    y: int
+    charging_rate: int

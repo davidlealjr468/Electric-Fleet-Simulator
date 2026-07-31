@@ -17,13 +17,11 @@ def find_nearest_charging_station(
     nearest_station_distance = float("inf")
 
     for station in charging_stations:
-        station_x, station_y = station
-
         station_distance = manhattan_distance(
             vehicle_x,
             vehicle_y,
-            station_x,
-            station_y,
+            station.x,
+            station.y,
         )
 
         if station_distance < nearest_station_distance:

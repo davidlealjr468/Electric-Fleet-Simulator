@@ -1,16 +1,31 @@
 import pytest
 
 from fleet_sim.distance import manhattan_distance
-from fleet_sim.models import Vehicle
+from fleet_sim.models import ChargingStation, Vehicle
 from fleet_sim.movement import move_vehicle_to
 from fleet_sim.selection import find_nearest_charging_station
 
 
 def test_find_nearest_charging_station():
     charging_stations = [
-        (4, 2),
-        (10, 8),
-        (1, 9),
+        ChargingStation(
+            station_id=1,
+            x=4,
+            y=2,
+            charging_rate=5,
+        ),
+        ChargingStation(
+            station_id=2,
+            x=10,
+            y=8,
+            charging_rate=8,
+        ),
+        ChargingStation(
+            station_id=3,
+            x=1,
+            y=9,
+            charging_rate=6,
+        ),
     ]
 
     station, distance = find_nearest_charging_station(
@@ -19,7 +34,9 @@ def test_find_nearest_charging_station():
         charging_stations,
     )
 
-    assert station == (4, 2)
+    assert station.station_id == 1
+    assert station.x == 4
+    assert station.y == 2
     assert distance == 6
 
 
