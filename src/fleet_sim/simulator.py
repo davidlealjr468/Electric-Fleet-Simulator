@@ -67,6 +67,8 @@ def main() -> None:
         distance_to_pickup + distance_pickup_to_dropoff + distance_dropoff_to_charger
     )
 
+    current_time = move_vehicle_to(vehicle, pickup_x, pickup_y, current_time)
+
     if vehicle.battery >= required_battery:
         print("The vehicle has enough battery to accept the trip.")
 
