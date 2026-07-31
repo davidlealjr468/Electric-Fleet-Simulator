@@ -2,7 +2,7 @@
 
 from fleet_sim.charging import charge_vehicle
 from fleet_sim.distance import manhattan_distance
-from fleet_sim.models import PassengerRequest, Vehicle
+from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
 from fleet_sim.movement import move_vehicle_to
 from fleet_sim.selection import find_nearest_charging_station
 
@@ -27,21 +27,41 @@ def main() -> None:
     )
 
     charging_stations = [
-        (4, 2),
-        (10, 8),
-        (1, 9),
+        ChargingStation(
+            station_id=1,
+            x=4,
+            y=2,
+            charging_rate=5,
+            total_ports=2,
+        ),
+        ChargingStation(
+            station_id=2,
+            x=10,
+            y=8,
+            charging_rate=8,
+            total_ports=4,
+        ),
+        ChargingStation(
+            station_id=3,
+            x=1,
+            y=9,
+            charging_rate=6,
+            total_ports=1,
+        ),
     ]
 
     nearest_station, nearest_station_distance = find_nearest_charging_station(
-        vehicle.x, vehicle.y, charging_stations
+        vehicle.x,
+        vehicle.y,
+        charging_stations,
     )
-    charging_station_x, charging_station_y = nearest_station
+    charging_station_x, charging_station_y = nearest_station.x, nearest_station.y
     distance_to_charger = nearest_station_distance
 
     print(
         f"Nearest charging station is at ({charging_station_x}, {charging_station_y})."
     )
-    charging_rate = 5  # Units per time step
+
     charging_target = 80
 
     distance_to_pickup = manhattan_distance(
@@ -69,24 +89,22 @@ def main() -> None:
         distance_to_pickup + distance_pickup_to_dropoff + distance_dropoff_to_charger
     )
 
-    current_time = move_vehicle_to(
-        vehicle, request.pickup_x, request.pickup_y, current_time
-    )
-
-    request.status = "picked_up"
-
     if vehicle.battery >= required_battery:
         print("The vehicle has enough battery to accept the trip.")
 
         vehicle.status = "to_pickup"
 
         current_time = move_vehicle_to(
-            vehicle, request.pickup_x, request.pickup_y, current_time
+            vehicle,
+            request.pickup_x,
+            request.pickup_y,
+            current_time,
         )
 
         print("The vehicle reached the passenger.")
 
         vehicle.status = "with_passenger"
+        request.status = "picked_up"
 
         current_time = move_vehicle_to(
             vehicle,
@@ -118,12 +136,16 @@ def main() -> None:
             print("The vehicle reached the charging station.")
             vehicle.status = "charging"
 
+            nearest_station.occupy_port()
+
             vehicle.battery, current_time = charge_vehicle(
                 vehicle.battery,
                 charging_target,
-                charging_rate,
+                nearest_station.charging_rate,
                 current_time,
             )
+
+            nearest_station.release_port()
 
             print("The vehicle finished charging.")
             vehicle.status = "idle"
@@ -135,7 +157,7 @@ def main() -> None:
             )
             print("The vehicle is stranded.")
             vehicle.status = "stranded"
-            request.status = "Waiting"
+            request.status = "waiting"
 
     distance_to_charger = manhattan_distance(
         vehicle.x,
@@ -160,6 +182,11 @@ def main() -> None:
     print(f"Distance from pickup to drop-off: {distance_pickup_to_dropoff}")
     print(f"Distance from drop-off to charging station: {distance_dropoff_to_charger}")
     print(f"Distance to charging station: {distance_to_charger}")
+    print(f"Charging station ID: {nearest_station.station_id}")
+    print(f"Available charging ports: {nearest_station.available_ports}")
+    print(f"Total charging ports: {nearest_station.total_ports}")
+    print(f"Occupied charging ports: {nearest_station.occupied_ports}")
+    print(f"Available charging ports: {nearest_station.available_ports}")
     print(f"Charging station position: ({charging_station_x}, {charging_station_y})")
 
 

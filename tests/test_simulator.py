@@ -1,16 +1,34 @@
 import pytest
 
 from fleet_sim.distance import manhattan_distance
-from fleet_sim.models import Vehicle
+from fleet_sim.models import ChargingStation, Vehicle
 from fleet_sim.movement import move_vehicle_to
 from fleet_sim.selection import find_nearest_charging_station
 
 
 def test_find_nearest_charging_station():
     charging_stations = [
-        (4, 2),
-        (10, 8),
-        (1, 9),
+        ChargingStation(
+            station_id=1,
+            x=4,
+            y=2,
+            charging_rate=5,
+            total_ports=2,
+        ),
+        ChargingStation(
+            station_id=2,
+            x=10,
+            y=8,
+            charging_rate=8,
+            total_ports=4,
+        ),
+        ChargingStation(
+            station_id=3,
+            x=1,
+            y=9,
+            charging_rate=6,
+            total_ports=1,
+        ),
     ]
 
     station, distance = find_nearest_charging_station(
@@ -19,8 +37,70 @@ def test_find_nearest_charging_station():
         charging_stations,
     )
 
-    assert station == (4, 2)
+    assert station.station_id == 1
+    assert station.x == 4
+    assert station.y == 2
     assert distance == 6
+
+
+def test_charging_station_occupies_and_releases_port() -> None:
+    station = ChargingStation(
+        station_id=1,
+        x=4,
+        y=2,
+        charging_rate=5,
+        total_ports=2,
+    )
+
+    station.occupy_port()
+
+    assert station.occupied_ports == 1
+    assert station.available_ports == 1
+
+    station.release_port()
+
+    assert station.occupied_ports == 0
+    assert station.available_ports == 2
+
+
+def test_charging_station_rejects_vehicle_when_full() -> None:
+    station = ChargingStation(
+        station_id=1,
+        x=4,
+        y=2,
+        charging_rate=5,
+        total_ports=1,
+    )
+
+    station.occupy_port()
+
+    with pytest.raises(
+        ValueError,
+        match="No charging ports are available.",
+    ):
+        station.occupy_port()
+
+    assert station.occupied_ports == 1
+    assert station.available_ports == 0
+
+
+def test_charging_station_rejects_release_when_empty() -> None:
+    station = ChargingStation(
+        station_id=1,
+        x=4,
+        y=2,
+        charging_rate=5,
+        total_ports=2,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="No occupied charging ports can be released",
+    ):
+        station.release_port()
+
+    assert station.occupied_ports == 0
+    assert station.available_ports == 2
 
 
 def test_find_nearest_charging_station_requires_stations():
