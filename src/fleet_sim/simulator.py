@@ -32,18 +32,21 @@ def main() -> None:
             x=4,
             y=2,
             charging_rate=5,
+            total_ports=2,
         ),
         ChargingStation(
             station_id=2,
             x=10,
             y=8,
             charging_rate=8,
+            total_ports=4,
         ),
         ChargingStation(
             station_id=3,
             x=1,
             y=9,
             charging_rate=6,
+            total_ports=1,
         ),
     ]
 
@@ -58,7 +61,7 @@ def main() -> None:
     print(
         f"Nearest charging station is at ({charging_station_x}, {charging_station_y})."
     )
-    charging_rate = nearest_station.charging_rate  # Units per time step
+
     charging_target = 80
 
     distance_to_pickup = manhattan_distance(
@@ -133,12 +136,16 @@ def main() -> None:
             print("The vehicle reached the charging station.")
             vehicle.status = "charging"
 
+            nearest_station.occupy_port()
+
             vehicle.battery, current_time = charge_vehicle(
                 vehicle.battery,
                 charging_target,
-                charging_rate,
+                nearest_station.charging_rate,
                 current_time,
             )
+
+            nearest_station.release_port()
 
             print("The vehicle finished charging.")
             vehicle.status = "idle"
@@ -175,6 +182,11 @@ def main() -> None:
     print(f"Distance from pickup to drop-off: {distance_pickup_to_dropoff}")
     print(f"Distance from drop-off to charging station: {distance_dropoff_to_charger}")
     print(f"Distance to charging station: {distance_to_charger}")
+    print(f"Charging station ID: {nearest_station.station_id}")
+    print(f"Available charging ports: {nearest_station.available_ports}")
+    print(f"Total charging ports: {nearest_station.total_ports}")
+    print(f"Occupied charging ports: {nearest_station.occupied_ports}")
+    print(f"Available charging ports: {nearest_station.available_ports}")
     print(f"Charging station position: ({charging_station_x}, {charging_station_y})")
 
 

@@ -13,18 +13,21 @@ def test_find_nearest_charging_station():
             x=4,
             y=2,
             charging_rate=5,
+            total_ports=2,
         ),
         ChargingStation(
             station_id=2,
             x=10,
             y=8,
             charging_rate=8,
+            total_ports=4,
         ),
         ChargingStation(
             station_id=3,
             x=1,
             y=9,
             charging_rate=6,
+            total_ports=1,
         ),
     ]
 

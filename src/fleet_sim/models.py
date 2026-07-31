@@ -34,3 +34,24 @@ class ChargingStation:
     x: int
     y: int
     charging_rate: int
+    total_ports: int
+    occupied_ports: int = 0
+
+    @property
+    def available_ports(self) -> int:
+        """Return the number of currently available charging ports"""
+        return self.total_ports - self.occupied_ports
+
+    def occupy_port(self) -> None:
+        """Occupy one charging port."""
+        if self.available_ports <= 0:
+            raise ValueError("No charging ports are available.")
+
+        self.occupied_ports += 1
+
+    def release_port(self) -> None:
+        """Release one charging port."""
+        if self.occupied_ports <= 0:
+            raise ValueError("No occupied charging ports can be released")
+
+        self.occupied_ports -= 1
