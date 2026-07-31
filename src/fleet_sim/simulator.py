@@ -75,11 +75,42 @@ def main() -> None:
     pickup_x = 7
     pickup_y = 6
 
-    dropoff_x = 8
+    dropoff_x = -8
     dropoff_y = 7
 
-    charging_station_x = 4
-    charging_station_y = 2
+    charging_stations = [
+        (4, 2),
+        (10, 8),
+        (1, 9),
+    ]
+
+    nearest_station = None
+    nearest_station_distance = float("inf")
+
+    # Finds the nearest charging station to the vehicle's current position
+    for station_index, station in enumerate(charging_stations):
+        station_x, station_y = station
+
+        station_distance = manhattan_distance(
+            vehicle_x,
+            vehicle_y,
+            station_x,
+            station_y,
+        )
+
+        print(
+            f"Charging station {station_index + 1} at ({station_x}, {station_y})"
+            f"is {station_distance} units away."
+        )
+
+        if station_distance < nearest_station_distance:
+            nearest_station = station
+            nearest_station_distance = station_distance
+
+    charging_station_x, charging_station_y = nearest_station
+    print(
+        f"Nearest charging station is at ({charging_station_x}, {charging_station_y})."
+    )
     charging_rate = 5  # Units per time step
     charging_target = 80
 
