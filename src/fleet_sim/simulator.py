@@ -2,7 +2,7 @@
 
 from fleet_sim.charging import charge_vehicle
 from fleet_sim.distance import manhattan_distance
-from fleet_sim.models import Vehicle
+from fleet_sim.models import PassengerRequest, Vehicle
 from fleet_sim.movement import move_vehicle_to
 from fleet_sim.selection import find_nearest_charging_station
 
@@ -18,11 +18,13 @@ def main() -> None:
         battery=10,
     )
 
-    pickup_x = 7
-    pickup_y = 6
-
-    dropoff_x = -8
-    dropoff_y = 7
+    request = PassengerRequest(
+        request_id=1,
+        pickup_x=7,
+        pickup_y=6,
+        dropoff_x=-8,
+        dropoff_y=7,
+    )
 
     charging_stations = [
         (4, 2),
@@ -45,20 +47,20 @@ def main() -> None:
     distance_to_pickup = manhattan_distance(
         vehicle.x,
         vehicle.y,
-        pickup_x,
-        pickup_y,
+        request.pickup_x,
+        request.pickup_y,
     )
 
     distance_pickup_to_dropoff = manhattan_distance(
-        pickup_x,
-        pickup_y,
-        dropoff_x,
-        dropoff_y,
+        request.pickup_x,
+        request.pickup_y,
+        request.dropoff_x,
+        request.dropoff_y,
     )
 
     distance_dropoff_to_charger = manhattan_distance(
-        dropoff_x,
-        dropoff_y,
+        request.dropoff_x,
+        request.dropoff_y,
         charging_station_x,
         charging_station_y,
     )
@@ -67,32 +69,35 @@ def main() -> None:
         distance_to_pickup + distance_pickup_to_dropoff + distance_dropoff_to_charger
     )
 
-    current_time = move_vehicle_to(vehicle, pickup_x, pickup_y, current_time)
+    current_time = move_vehicle_to(
+        vehicle, request.pickup_x, request.pickup_y, current_time
+    )
+
+    request.status = "picked_up"
 
     if vehicle.battery >= required_battery:
         print("The vehicle has enough battery to accept the trip.")
 
         vehicle.status = "to_pickup"
 
-        vehicle.x, vehicle.y, current_time, vehicle.battery = move_vehicle_to(
-            vehicle.x, vehicle.y, pickup_x, pickup_y, current_time, vehicle.battery
+        current_time = move_vehicle_to(
+            vehicle, request.pickup_x, request.pickup_y, current_time
         )
 
         print("The vehicle reached the passenger.")
 
         vehicle.status = "with_passenger"
 
-        vehicle.x, vehicle.y, current_time, vehicle.battery = move_vehicle_to(
-            vehicle.x,
-            vehicle.y,
-            dropoff_x,
-            dropoff_y,
+        current_time = move_vehicle_to(
+            vehicle,
+            request.dropoff_x,
+            request.dropoff_y,
             current_time,
-            vehicle.battery,
         )
 
         print("The passenger reached the drop-off location.")
 
+        request.status = "completed"
         vehicle.status = "idle"
 
     else:
@@ -103,13 +108,11 @@ def main() -> None:
 
             vehicle.status = "to_charger"
 
-            vehicle.x, vehicle.y, current_time, vehicle.battery = move_vehicle_to(
-                vehicle.x,
-                vehicle.y,
+            current_time = move_vehicle_to(
+                vehicle,
                 charging_station_x,
                 charging_station_y,
                 current_time,
-                vehicle.battery,
             )
 
             print("The vehicle reached the charging station.")
@@ -132,6 +135,7 @@ def main() -> None:
             )
             print("The vehicle is stranded.")
             vehicle.status = "stranded"
+            request.status = "Waiting"
 
     distance_to_charger = manhattan_distance(
         vehicle.x,
@@ -145,14 +149,21 @@ def main() -> None:
     print(f"Vehicle position: ({vehicle.x}, {vehicle.y})")
     print(f"Vehicle Status: {vehicle.status}")
     print(f"Battery Level: {vehicle.battery}")
+
+    print(f"Request ID: {request.request_id}")
+    print(f"Request Status: {request.status}")
+    print(f"Pickup position: ({request.pickup_x}, {request.pickup_y})")
+    print(f"Drop-off position: ({request.dropoff_x}, {request.dropoff_y})")
+
     print(f"Required Battery: {required_battery}")
     print(f"Distance to pickup: {distance_to_pickup}")
-    print(f"Distance to charging station: {distance_to_charger}")
     print(f"Distance from pickup to drop-off: {distance_pickup_to_dropoff}")
-    print(f"Pickup position: ({pickup_x}, {pickup_y})")
-    print(f"Drop-off position: ({dropoff_x}, {dropoff_y})")
     print(f"Distance from drop-off to charging station: {distance_dropoff_to_charger}")
-    print(f"Charging station position: ({charging_station_x}, {charging_station_y})")
+    print(f"Distance to charging station: {distance_to_charger}")
+    print(
+        f"Charging station position: "
+        f"({charging_station_x}, {charging_station_y})"
+    )
 
 
 if __name__ == "__main__":

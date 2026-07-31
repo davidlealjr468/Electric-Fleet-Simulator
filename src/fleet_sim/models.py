@@ -12,3 +12,15 @@ class Vehicle:
     y: int
     battery: int
     status: str = "idle"  # Possible statuses: idle, to_charger, charging, stranded
+
+
+@dataclass
+class PassengerRequest:
+    """Represents a passenger trip request."""
+
+    request_id: int
+    pickup_x: int
+    pickup_y: int
+    dropoff_x: int
+    dropoff_y: int
+    status: str = "waiting"
