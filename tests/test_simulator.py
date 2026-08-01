@@ -3,7 +3,10 @@ import pytest
 from fleet_sim.distance import manhattan_distance
 from fleet_sim.models import ChargingStation, Vehicle
 from fleet_sim.movement import move_vehicle_to
-from fleet_sim.selection import find_nearest_charging_station
+from fleet_sim.selection import (
+    find_nearest_available_vehicle,
+    find_nearest_charging_station,
+)
 
 
 def test_find_nearest_charging_station():
@@ -41,6 +44,109 @@ def test_find_nearest_charging_station():
     assert station.x == 4
     assert station.y == 2
     assert distance == 6
+
+
+def test_find_nearest_available_vehicle() -> None:
+    vehicles = [
+        Vehicle(
+            vehicle_id=1,
+            x=0,
+            y=0,
+            battery=10,
+        ),
+        Vehicle(
+            vehicle_id=2,
+            x=5,
+            y=5,
+            battery=15,
+        ),
+        Vehicle(
+            vehicle_id=3,
+            x=-4,
+            y=3,
+            battery=20,
+        ),
+    ]
+
+    vehicle, distance = find_nearest_available_vehicle(
+        pickup_x=7,
+        pickup_y=6,
+        vehicles=vehicles,
+    )
+
+    assert vehicle.vehicle_id == 2
+    assert vehicle.x == 5
+    assert vehicle.y == 5
+    assert distance == 3
+
+
+def test_find_nearest_available_vehicle_skips_busy_vehicle() -> None:
+    vehicles = [
+        Vehicle(
+            vehicle_id=1,
+            x=6,
+            y=6,
+            battery=80,
+            status="with_passenger",
+        ),
+        Vehicle(
+            vehicle_id=2,
+            x=5,
+            y=5,
+            battery=70,
+        ),
+        Vehicle(
+            vehicle_id=3,
+            x=0,
+            y=0,
+            battery=100,
+        ),
+    ]
+
+    vehicle, distance = find_nearest_available_vehicle(
+        pickup_x=7,
+        pickup_y=6,
+        vehicles=vehicles,
+    )
+
+    assert vehicle.vehicle_id == 2
+    assert distance == 3
+
+
+def test_find_nearest_available_vehicle_requires_idle_vehicle() -> None:
+    vehicles = [
+        Vehicle(
+            vehicle_id=1,
+            x=0,
+            y=0,
+            battery=80,
+            status="with_passenger",
+        ),
+        Vehicle(
+            vehicle_id=2,
+            x=5,
+            y=5,
+            battery=70,
+            status="charging",
+        ),
+        Vehicle(
+            vehicle_id=3,
+            x=-4,
+            y=3,
+            battery=60,
+            status="to_charger",
+        ),
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match="No available vehicles were found.",
+    ):
+        find_nearest_available_vehicle(
+            pickup_x=7,
+            pickup_y=6,
+            vehicles=vehicles,
+        )
 
 
 def test_charging_station_occupies_and_releases_port() -> None:
