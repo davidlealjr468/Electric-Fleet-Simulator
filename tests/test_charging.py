@@ -1,6 +1,8 @@
-"""Tests for vehicle charging behavior."""
+import pytest
 
 from fleet_sim.charging import charge_vehicle
+
+"""Tests for vehicle charging behavior."""
 
 
 def test_charge_vehicle_to_target() -> None:
@@ -37,3 +39,29 @@ def test_charge_vehicle_when_already_at_target() -> None:
 
     assert battery == 80
     assert current_time == 10
+
+
+def test_charge_vehicle_rejects_nonpositive_charging_rate() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Charging rate must be greater than zero.",
+    ):
+        charge_vehicle(
+            vehicle_battery=20,
+            charging_target=80,
+            charging_rate=0,
+            current_time=5,
+        )
+
+
+def test_charge_vehicle_rejects_target_below_current_battery() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Charging target cannot be below the current battery level.",
+    ):
+        charge_vehicle(
+            vehicle_battery=80,
+            charging_target=60,
+            charging_rate=5,
+            current_time=10,
+        )

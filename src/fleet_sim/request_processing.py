@@ -33,6 +33,21 @@ def process_request(
         distance_pickup_to_dropoff + distance_to_dropoff_station
     )
 
+    try:
+        vehicle, distance_to_pickup = find_nearest_available_vehicle(
+            pickup_x=request.pickup_x,
+            pickup_y=request.pickup_y,
+            vehicles=vehicles,
+            minimum_battery_after_pickup=minimum_battery_after_pickup,
+        )
+    except ValueError:
+        print(
+            f"No available vehicles can complete "
+            f"the trip for request {request.request_id}."
+        )
+        request.status = "waiting"
+        return current_time
+
     vehicle, distance_to_pickup = find_nearest_available_vehicle(
         pickup_x=request.pickup_x,
         pickup_y=request.pickup_y,
