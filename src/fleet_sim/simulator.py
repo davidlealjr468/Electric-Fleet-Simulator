@@ -4,14 +4,17 @@ from fleet_sim.charging import charge_vehicle
 from fleet_sim.distance import manhattan_distance
 from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
 from fleet_sim.movement import move_vehicle_to
-from fleet_sim.selection import find_nearest_charging_station
+from fleet_sim.selection import (
+    find_nearest_available_vehicle,
+    find_nearest_charging_station,
+)
 
 
 def main() -> None:
     """Run the base electric fleet simulation."""
     current_time = 0
 
-    vehicle = [
+    vehicles = [
         Vehicle(
             vehicle_id=1,
             x=0,
@@ -26,13 +29,11 @@ def main() -> None:
         ),
         Vehicle(
             vehicle_id=3,
-            x=10,
-            y=10,
+            x=-4,
+            y=3,
             battery=20,
         ),
     ]
-
-    vehicle = vehicle[0]  # Select the first vehicle for this simulation
 
     request = PassengerRequest(
         request_id=1,
@@ -40,6 +41,17 @@ def main() -> None:
         pickup_y=6,
         dropoff_x=-8,
         dropoff_y=7,
+    )
+
+    vehicle, distance_to_pickup = find_nearest_available_vehicle(
+        request.pickup_x,
+        request.pickup_y,
+        vehicles,
+    )
+
+    print(
+        f"Nearest available vehicle is ID {vehicle.vehicle_id} "
+        f"at ({vehicle.x}, {vehicle.y}) with battery level {vehicle.battery}."
     )
 
     charging_stations = [
@@ -79,13 +91,6 @@ def main() -> None:
     )
 
     charging_target = 80
-
-    distance_to_pickup = manhattan_distance(
-        vehicle.x,
-        vehicle.y,
-        request.pickup_x,
-        request.pickup_y,
-    )
 
     distance_pickup_to_dropoff = manhattan_distance(
         request.pickup_x,
@@ -202,7 +207,6 @@ def main() -> None:
     print(f"Available charging ports: {nearest_station.available_ports}")
     print(f"Total charging ports: {nearest_station.total_ports}")
     print(f"Occupied charging ports: {nearest_station.occupied_ports}")
-    print(f"Available charging ports: {nearest_station.available_ports}")
     print(f"Charging station position: ({charging_station_x}, {charging_station_y})")
 
 
