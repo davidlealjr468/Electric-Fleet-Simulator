@@ -11,12 +11,28 @@ def main() -> None:
     """Run the base electric fleet simulation."""
     current_time = 0
 
-    vehicle = Vehicle(
-        vehicle_id=1,
-        x=0,
-        y=0,
-        battery=10,
-    )
+    vehicle = [
+        Vehicle(
+            vehicle_id=1,
+            x=0,
+            y=0,
+            battery=10,
+        ),
+        Vehicle(
+            vehicle_id=2,
+            x=5,
+            y=5,
+            battery=15,
+        ),
+        Vehicle(
+            vehicle_id=3,
+            x=10,
+            y=10,
+            battery=20,
+        ),
+    ]
+
+    vehicle = vehicle[0]  # Select the first vehicle for this simulation
 
     request = PassengerRequest(
         request_id=1,
