@@ -10,63 +10,13 @@ from fleet_sim.selection import (
 )
 
 
-def main() -> None:
-    """Run the base electric fleet simulation."""
-    current_time = 0
-
-    vehicles = [
-        Vehicle(
-            vehicle_id=1,
-            x=0,
-            y=0,
-            battery=10,
-        ),
-        Vehicle(
-            vehicle_id=2,
-            x=5,
-            y=5,
-            battery=70,
-        ),
-        Vehicle(
-            vehicle_id=3,
-            x=-4,
-            y=3,
-            battery=20,
-        ),
-    ]
-
-    request = PassengerRequest(
-        request_id=1,
-        pickup_x=7,
-        pickup_y=6,
-        dropoff_x=-8,
-        dropoff_y=7,
-    )
-
-    charging_stations = [
-        ChargingStation(
-            station_id=1,
-            x=4,
-            y=2,
-            charging_rate=5,
-            total_ports=2,
-        ),
-        ChargingStation(
-            station_id=2,
-            x=10,
-            y=8,
-            charging_rate=8,
-            total_ports=4,
-        ),
-        ChargingStation(
-            station_id=3,
-            x=1,
-            y=9,
-            charging_rate=6,
-            total_ports=1,
-        ),
-    ]
-
+def process_request(
+    request,
+    vehicles,
+    charging_stations,
+    current_time,
+):
+    """Process a passenger request."""
     dropoff_station, distance_to_dropoff_station = find_nearest_charging_station(
         request.dropoff_x,
         request.dropoff_y,
@@ -216,6 +166,93 @@ def main() -> None:
     print(f"Total charging ports: {nearest_station.total_ports}")
     print(f"Occupied charging ports: {nearest_station.occupied_ports}")
     print(f"Charging station position: ({charging_station_x}, {charging_station_y})")
+
+    return current_time
+
+
+def main() -> None:
+    """Run the base electric fleet simulation."""
+    current_time = 0
+
+    vehicles = [
+        Vehicle(
+            vehicle_id=1,
+            x=0,
+            y=0,
+            battery=10,
+        ),
+        Vehicle(
+            vehicle_id=2,
+            x=5,
+            y=5,
+            battery=70,
+        ),
+        Vehicle(
+            vehicle_id=3,
+            x=-4,
+            y=3,
+            battery=20,
+        ),
+    ]
+
+    requests = [
+        PassengerRequest(
+            request_id=1,
+            pickup_x=7,
+            pickup_y=6,
+            dropoff_x=-8,
+            dropoff_y=7,
+        ),
+        PassengerRequest(
+            request_id=2,
+            pickup_x=2,
+            pickup_y=3,
+            dropoff_x=5,
+            dropoff_y=1,
+        ),
+        PassengerRequest(
+            request_id=3,
+            pickup_x=-3,
+            pickup_y=4,
+            dropoff_x=1,
+            dropoff_y=-2,
+        ),
+    ]
+
+    charging_stations = [
+        ChargingStation(
+            station_id=1,
+            x=4,
+            y=2,
+            charging_rate=5,
+            total_ports=2,
+        ),
+        ChargingStation(
+            station_id=2,
+            x=10,
+            y=8,
+            charging_rate=8,
+            total_ports=4,
+        ),
+        ChargingStation(
+            station_id=3,
+            x=1,
+            y=9,
+            charging_rate=6,
+            total_ports=1,
+        ),
+    ]
+
+    for request in requests:
+        print()
+        print(f"Processing request {request.request_id}")
+
+        current_time = process_request(
+            request,
+            vehicles,
+            charging_stations,
+            current_time,
+        )
 
 
 if __name__ == "__main__":
