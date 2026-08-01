@@ -35,6 +35,7 @@ def find_nearest_available_vehicle(
     pickup_x,
     pickup_y,
     vehicles,
+    minimum_battery_after_pickup=0,
 ):
     """Find the nearest idle vehicle to a passenger pickup location."""
     nearest_vehicle = None
@@ -50,6 +51,13 @@ def find_nearest_available_vehicle(
             pickup_x,
             pickup_y,
         )
+
+        required_battery = (
+            vehicle_distance + minimum_battery_after_pickup
+        )  # Battery needed to reach the pickup location
+
+        if required_battery > vehicle.battery:
+            continue
 
         if vehicle_distance < nearest_vehicle_distance:
             nearest_vehicle = vehicle

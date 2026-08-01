@@ -149,6 +149,32 @@ def test_find_nearest_available_vehicle_requires_idle_vehicle() -> None:
         )
 
 
+def test_find_nearest_available_vehicle_skips_low_battery_vehicle() -> None:
+    vehicles = [
+        Vehicle(
+            vehicle_id=1,
+            x=6,
+            y=6,
+            battery=0,
+        ),
+        Vehicle(
+            vehicle_id=2,
+            x=5,
+            y=5,
+            battery=10,
+        ),
+    ]
+
+    vehicle, distance = find_nearest_available_vehicle(
+        pickup_x=7,
+        pickup_y=6,
+        vehicles=vehicles,
+    )
+
+    assert vehicle.vehicle_id == 2
+    assert distance == 3
+
+
 def test_charging_station_occupies_and_releases_port() -> None:
     station = ChargingStation(
         station_id=1,
