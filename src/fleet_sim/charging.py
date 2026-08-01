@@ -9,6 +9,11 @@ def charge_vehicle(
 ):
     """Charge a vehicle to a target level and update simulation time."""
 
+    if charging_rate <= 0:
+        raise ValueError("Charging rate must be greater than zero.")
+
+    if charging_target < vehicle_battery:
+        raise ValueError("Charging target cannot be below the current battery level.")
     while vehicle_battery < charging_target:
         vehicle_battery = min(
             vehicle_battery + charging_rate,
