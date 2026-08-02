@@ -1,11 +1,16 @@
 """Base electric fleet simulator."""
 
+from fleet_sim.event_queue import EventQueue
 from fleet_sim.models import ChargingStation, PassengerRequest, ScheduledTrip, Vehicle
-from fleet_sim.request_processing import process_request
+from fleet_sim.scheduling import (
+    complete_ready_trips,
+    schedule_request,
+)
 
 
 def main() -> None:
     """Run the base electric fleet simulation."""
+    event_queue = EventQueue()
     current_time = 0
 
     vehicles = [
@@ -90,19 +95,61 @@ def main() -> None:
         battery_used=19,
     )
 
-    requests.sort(key=lambda r: r.arrival_time)
+    requests.sort(key=lambda request: request.arrival_time)
+
     for request in requests:
-        if current_time < request.arrival_time:
-            current_time = request.arrival_time
+        current_time = request.arrival_time
+
+        complete_ready_trips(
+            event_queue=event_queue,
+            current_time=current_time,
+            vehicles=vehicles,
+            requests=requests,
+        )
+
         print()
         print(f"Processing request {request.request_id} at time {current_time}")
 
-        current_time = process_request(
-            request,
-            vehicles,
-            charging_stations,
-            current_time,
+        trip = schedule_request(
+            request=request,
+            vehicles=vehicles,
+            charging_stations=charging_stations,
+            event_queue=event_queue,
+            current_time=current_time,
         )
+
+        if trip is None:
+            print(f"Request {request.request_id} remains waiting.")
+        else:
+            print(
+                f"Request {request.request_id} assigned to vehicle {trip.vehicle_id}."
+            )
+            print(f"Scheduled completion time: {trip.completion_time}")
+
+    while not event_queue.is_empty():
+        current_time = event_queue.peek().completion_time
+
+        complete_ready_trips(
+            event_queue=event_queue,
+            current_time=current_time,
+            vehicles=vehicles,
+            requests=requests,
+        )
+
+    print()
+    print("Final simulation state")
+
+    for vehicle in vehicles:
+        print(
+            f"Vehicle {vehicle.vehicle_id}: "
+            f"position=({vehicle.x}, {vehicle.y}), "
+            f"battery={vehicle.battery}, "
+            f"status={vehicle.status}, "
+            f"available_time={vehicle.available_time}"
+        )
+
+    for request in requests:
+        print(f"Request {request.request_id}: status={request.status}")
 
 
 if __name__ == "__main__":
