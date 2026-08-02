@@ -4,7 +4,7 @@ from fleet_sim.event_queue import EventQueue
 from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
 from fleet_sim.request_queue import RequestQueue
 from fleet_sim.scheduling import (
-    complete_ready_trips,
+    complete_ready_events,
     retry_waiting_requests,
     schedule_request,
 )
@@ -103,11 +103,12 @@ def main() -> None:
     for request in requests:
         current_time = request.arrival_time
 
-        complete_ready_trips(
+        complete_ready_events(
             event_queue=event_queue,
             current_time=current_time,
             vehicles=vehicles,
             requests=requests,
+            charging_stations=charging_stations,
         )
 
         retry_waiting_requests(
@@ -142,11 +143,12 @@ def main() -> None:
     while not event_queue.is_empty():
         current_time = event_queue.peek().completion_time
 
-        complete_ready_trips(
+        complete_ready_events(
             event_queue=event_queue,
             current_time=current_time,
             vehicles=vehicles,
             requests=requests,
+            charging_stations=charging_stations,
         )
 
         retry_waiting_requests(

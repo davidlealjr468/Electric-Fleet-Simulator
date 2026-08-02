@@ -1,10 +1,12 @@
 """Functions for scheduling vehicle trips."""
 
+from fleet_sim.charging import complete_scheduled_charge
 from fleet_sim.distance import manhattan_distance
 from fleet_sim.event_queue import EventQueue
 from fleet_sim.models import (
     ChargingStation,
     PassengerRequest,
+    ScheduledCharge,
     ScheduledTrip,
     Vehicle,
 )
@@ -101,22 +103,31 @@ def assign_trip(
     return trip
 
 
-def complete_ready_trips(
+def complete_ready_events(
     event_queue: EventQueue,
     current_time: int,
     vehicles: list[Vehicle],
     requests: list[PassengerRequest],
+    charging_stations: list[ChargingStation],
 ) -> None:
-    """Complete every scheduled trip ready by the current time."""
+    """Complete every simulation event ready by the current time."""
 
-    ready_trips = event_queue.pop_ready(current_time)
+    ready_events = event_queue.pop_ready(current_time)
 
-    for trip in ready_trips:
-        complete_scheduled_trip(
-            trip=trip,
-            vehicles=vehicles,
-            requests=requests,
-        )
+    for event in ready_events:
+        if isinstance(event, ScheduledTrip):
+            complete_scheduled_trip(
+                trip=event,
+                vehicles=vehicles,
+                requests=requests,
+            )
+
+        elif isinstance(event, ScheduledCharge):
+            complete_scheduled_charge(
+                charge=event,
+                vehicles=vehicles,
+                charging_stations=charging_stations,
+            )
 
 
 def schedule_request(

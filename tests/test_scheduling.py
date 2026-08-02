@@ -1,5 +1,6 @@
 """Tests for trip scheduling."""
 
+from fleet_sim.charging import schedule_charge
 from fleet_sim.event_queue import EventQueue
 from fleet_sim.models import (
     ChargingStation,
@@ -10,7 +11,7 @@ from fleet_sim.request_queue import RequestQueue
 from fleet_sim.scheduling import (
     assign_trip,
     calculate_trip_duration,
-    complete_ready_trips,
+    complete_ready_events,
     complete_scheduled_trip,
     retry_waiting_requests,
     schedule_request,
@@ -222,11 +223,12 @@ def test_complete_ready_trips_only_completes_finished_events() -> None:
     queue.push(first_trip)
     queue.push(second_trip)
 
-    complete_ready_trips(
+    complete_ready_events(
         event_queue=queue,
         current_time=3,
         vehicles=vehicles,
         requests=requests,
+        charging_stations=[],
     )
 
     assert requests[0].status == "completed"
@@ -476,11 +478,12 @@ def test_waiting_request_is_assigned_after_vehicle_completes() -> None:
 
     request_queue.add(requests[1])
 
-    complete_ready_trips(
+    complete_ready_events(
         event_queue=event_queue,
         current_time=5,
         vehicles=vehicles,
         requests=requests,
+        charging_stations=charging_stations,
     )
 
     retry_waiting_requests(
@@ -502,3 +505,47 @@ def test_waiting_request_is_assigned_after_vehicle_completes() -> None:
     assert next_trip.request_id == 2
     assert next_trip.start_time == 5
     assert next_trip.completion_time == 7
+
+
+def test_complete_ready_events_completes_charge_event() -> None:
+    vehicle = Vehicle(
+        vehicle_id=1,
+        x=4,
+        y=2,
+        battery=40,
+    )
+
+    station = ChargingStation(
+        station_id=1,
+        x=4,
+        y=2,
+        charging_rate=10,
+        total_ports=1,
+    )
+
+    requests: list[PassengerRequest] = []
+    queue = EventQueue()
+
+    charge = schedule_charge(
+        vehicle=vehicle,
+        station=station,
+        start_time=5,
+        target_battery=80,
+    )
+
+    queue.push(charge)
+
+    complete_ready_events(
+        event_queue=queue,
+        current_time=9,
+        vehicles=[vehicle],
+        requests=requests,
+        charging_stations=[station],
+    )
+
+    assert vehicle.battery == 80
+    assert vehicle.status == "idle"
+    assert vehicle.available_time == 9
+
+    assert station.occupied_ports == 0
+    assert queue.is_empty()
