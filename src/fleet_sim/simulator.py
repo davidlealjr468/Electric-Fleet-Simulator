@@ -61,6 +61,14 @@ def main() -> None:
             dropoff_y=-3,
             arrival_time=4,
         ),
+        PassengerRequest(
+            request_id=4,
+            pickup_x=0,
+            pickup_y=1,
+            dropoff_x=3,
+            dropoff_y=1,
+            arrival_time=3,
+        ),
     ]
 
     charging_stations = [

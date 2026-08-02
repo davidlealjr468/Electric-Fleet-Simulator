@@ -190,3 +190,9 @@ def retry_waiting_requests(
 
         if trip is None:
             request_queue.add(request)
+        else:
+            print(
+                f"Waiting request {request.request_id} assigned to "
+                f"vehicle {trip.vehicle_id} at time {current_time}."
+            )
+            print(f"Scheduled completion time: {trip.completion_time}")
