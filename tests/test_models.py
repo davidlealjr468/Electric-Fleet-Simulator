@@ -91,11 +91,11 @@ def test_scheduled_charge_stores_future_completion() -> None:
         station_id=2,
         start_time=10,
         completion_time=18,
-        battery_charged=80,
+        target_battery=80,
     )
 
     assert charge.vehicle_id == 1
     assert charge.station_id == 2
     assert charge.start_time == 10
     assert charge.completion_time == 18
-    assert charge.battery_charged == 80
+    assert charge.target_battery == 80
