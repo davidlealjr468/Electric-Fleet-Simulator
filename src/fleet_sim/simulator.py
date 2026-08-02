@@ -23,8 +23,8 @@ def main() -> None:
         ),
         Vehicle(
             vehicle_id=3,
-            x=-4,
-            y=3,
+            x=10,
+            y=10,
             battery=20,
         ),
     ]
