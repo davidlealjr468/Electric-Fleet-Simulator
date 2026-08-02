@@ -1,6 +1,6 @@
 """Base electric fleet simulator."""
 
-from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
+from fleet_sim.models import ChargingStation, PassengerRequest, ScheduledTrip, Vehicle
 from fleet_sim.request_processing import process_request
 
 
@@ -79,6 +79,16 @@ def main() -> None:
             total_ports=1,
         ),
     ]
+
+    ScheduledTrip(
+        vehicle_id=2,
+        request_id=1,
+        start_time=0,
+        completion_time=19,
+        final_x=-8,
+        final_y=7,
+        battery_used=19,
+    )
 
     requests.sort(key=lambda r: r.arrival_time)
     for request in requests:

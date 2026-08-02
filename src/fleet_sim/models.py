@@ -59,3 +59,16 @@ class ChargingStation:
             raise ValueError("No occupied charging ports can be released")
 
         self.occupied_ports -= 1
+
+
+@dataclass
+class ScheduledTrip:
+    """Represent a passenger trip scheduled to finish in the future."""
+
+    vehicle_id: int
+    request_id: int
+    start_time: int
+    completion_time: int
+    final_x: int
+    final_y: int
+    battery_used: int

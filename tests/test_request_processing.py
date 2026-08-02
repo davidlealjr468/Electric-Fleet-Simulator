@@ -3,6 +3,7 @@
 from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
 from fleet_sim.request_processing import process_request
 
+
 def test_process_request_completes_trip() -> None:
     vehicles = [
         Vehicle(
