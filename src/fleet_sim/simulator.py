@@ -1,16 +1,13 @@
-"""Base electric fleet simulator."""
+"""Run the electric fleet simulation."""
 
 from fleet_sim.event_queue import EventQueue
-from fleet_sim.models import ChargingStation, PassengerRequest, ScheduledTrip, Vehicle
-from fleet_sim.scheduling import (
-    complete_ready_trips,
-    schedule_request,
-)
+from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
+from fleet_sim.scheduling import complete_ready_trips, schedule_request
 
 
 def main() -> None:
-    """Run the base electric fleet simulation."""
-    event_queue = EventQueue()
+    """Run the electric fleet simulation."""
+
     current_time = 0
 
     vehicles = [
@@ -18,46 +15,46 @@ def main() -> None:
             vehicle_id=1,
             x=0,
             y=0,
-            battery=10,
+            battery=80,
         ),
         Vehicle(
             vehicle_id=2,
-            x=5,
+            x=8,
             y=5,
-            battery=70,
+            battery=90,
         ),
         Vehicle(
             vehicle_id=3,
-            x=10,
-            y=10,
-            battery=20,
+            x=-6,
+            y=4,
+            battery=75,
         ),
     ]
 
     requests = [
         PassengerRequest(
             request_id=1,
-            pickup_x=7,
-            pickup_y=6,
-            dropoff_x=-8,
-            dropoff_y=7,
+            pickup_x=1,
+            pickup_y=0,
+            dropoff_x=6,
+            dropoff_y=0,
             arrival_time=0,
         ),
         PassengerRequest(
             request_id=2,
-            pickup_x=2,
-            pickup_y=3,
-            dropoff_x=5,
-            dropoff_y=1,
-            arrival_time=10,
+            pickup_x=8,
+            pickup_y=6,
+            dropoff_x=10,
+            dropoff_y=10,
+            arrival_time=2,
         ),
         PassengerRequest(
             request_id=3,
-            pickup_x=-3,
+            pickup_x=-5,
             pickup_y=4,
-            dropoff_x=1,
-            dropoff_y=-2,
-            arrival_time=35,
+            dropoff_x=-10,
+            dropoff_y=-3,
+            arrival_time=4,
         ),
     ]
 
@@ -78,22 +75,14 @@ def main() -> None:
         ),
         ChargingStation(
             station_id=3,
-            x=1,
-            y=9,
+            x=-8,
+            y=-1,
             charging_rate=6,
             total_ports=1,
         ),
     ]
 
-    ScheduledTrip(
-        vehicle_id=2,
-        request_id=1,
-        start_time=0,
-        completion_time=19,
-        final_x=-8,
-        final_y=7,
-        battery_used=19,
-    )
+    event_queue = EventQueue()
 
     requests.sort(key=lambda request: request.arrival_time)
 
