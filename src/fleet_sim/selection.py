@@ -36,6 +36,7 @@ def find_nearest_available_vehicle(
     pickup_y,
     vehicles,
     minimum_battery_after_pickup=0,
+    current_time=0,
 ):
     """Find the nearest idle vehicle to a passenger pickup location."""
     nearest_vehicle = None
@@ -43,6 +44,9 @@ def find_nearest_available_vehicle(
 
     for vehicle in vehicles:
         if vehicle.status != "idle":
+            continue
+
+        if vehicle.available_time > current_time:
             continue
 
         vehicle_distance = manhattan_distance(

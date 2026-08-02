@@ -39,6 +39,7 @@ def process_request(
             pickup_y=request.pickup_y,
             vehicles=vehicles,
             minimum_battery_after_pickup=minimum_battery_after_pickup,
+            current_time=current_time,
         )
     except ValueError:
         print(
@@ -53,6 +54,7 @@ def process_request(
         pickup_y=request.pickup_y,
         vehicles=vehicles,
         minimum_battery_after_pickup=minimum_battery_after_pickup,
+        current_time=current_time,
     )
 
     print(
@@ -108,6 +110,7 @@ def process_request(
 
         print("The passenger reached the drop-off location.")
 
+        vehicle.available_time = current_time
         request.status = "completed"
         vehicle.status = "idle"
 

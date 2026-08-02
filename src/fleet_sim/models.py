@@ -12,7 +12,9 @@ class Vehicle:
     y: int
     battery: int
     status: str = "idle"  # Possible statuses: idle, to_charger, charging, stranded
-    available_time: int = 0  # Time when the vehicle will be available for the next request
+    available_time: int = (
+        0  # Time when the vehicle will be available for the next request
+    )
 
 
 @dataclass

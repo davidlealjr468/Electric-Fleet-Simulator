@@ -1,8 +1,7 @@
-"""Integration tests for the fleet simulator."""
+"""Integration tests for request processing."""
 
 from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
-from fleet_sim.simulator import process_request
-
+from fleet_sim.request_processing import process_request
 
 def test_process_request_completes_trip() -> None:
     vehicles = [
@@ -61,6 +60,7 @@ def test_process_request_completes_trip() -> None:
     assert selected_vehicle.y == 7
     assert selected_vehicle.battery == 51
     assert selected_vehicle.status == "idle"
+    assert selected_vehicle.available_time == 19
 
 
 def test_process_request_leaves_request_waiting_when_no_vehicle_is_feasible() -> None:
@@ -121,3 +121,4 @@ def test_process_request_leaves_request_waiting_when_no_vehicle_is_feasible() ->
     assert vehicles[1].x == 5
     assert vehicles[1].y == 5
     assert vehicles[1].battery == 1
+    assert vehicles[1].available_time == 0

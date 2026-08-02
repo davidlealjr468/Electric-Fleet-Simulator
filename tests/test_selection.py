@@ -185,3 +185,32 @@ def test_find_nearest_available_vehicle_skips_low_battery_vehicle() -> None:
 
     assert vehicle.vehicle_id == 2
     assert distance == 3
+
+
+def test_vehicle_is_skipped_before_its_available_time() -> None:
+    vehicles = [
+        Vehicle(
+            vehicle_id=1,
+            x=0,
+            y=0,
+            battery=100,
+            available_time=20,
+        ),
+        Vehicle(
+            vehicle_id=2,
+            x=5,
+            y=5,
+            battery=100,
+            available_time=0,
+        ),
+    ]
+
+    vehicle, distance = find_nearest_available_vehicle(
+        pickup_x=1,
+        pickup_y=1,
+        vehicles=vehicles,
+        current_time=10,
+    )
+
+    assert vehicle.vehicle_id == 2
+    assert distance == 8
