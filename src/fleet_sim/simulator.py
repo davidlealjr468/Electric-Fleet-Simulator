@@ -36,6 +36,7 @@ def main() -> None:
             pickup_y=6,
             dropoff_x=-8,
             dropoff_y=7,
+            arrival_time=0,
         ),
         PassengerRequest(
             request_id=2,
@@ -43,6 +44,7 @@ def main() -> None:
             pickup_y=3,
             dropoff_x=5,
             dropoff_y=1,
+            arrival_time=10,
         ),
         PassengerRequest(
             request_id=3,
@@ -50,6 +52,7 @@ def main() -> None:
             pickup_y=4,
             dropoff_x=1,
             dropoff_y=-2,
+            arrival_time=35,
         ),
     ]
 
@@ -77,9 +80,12 @@ def main() -> None:
         ),
     ]
 
+    requests.sort(key=lambda r: r.arrival_time)
     for request in requests:
+        if current_time < request.arrival_time:
+            current_time = request.arrival_time
         print()
-        print(f"Processing request {request.request_id}")
+        print(f"Processing request {request.request_id} at time {current_time}")
 
         current_time = process_request(
             request,
