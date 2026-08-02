@@ -8,6 +8,7 @@ from fleet_sim.models import (
     ScheduledTrip,
     Vehicle,
 )
+from fleet_sim.request_queue import RequestQueue
 from fleet_sim.selection import (
     find_nearest_available_vehicle,
     find_nearest_charging_station,
@@ -165,3 +166,33 @@ def schedule_request(
     event_queue.push(trip)
 
     return trip
+
+
+def retry_waiting_requests(
+    request_queue: RequestQueue,
+    vehicles: list[Vehicle],
+    charging_stations: list[ChargingStation],
+    event_queue: EventQueue,
+    current_time: int,
+) -> None:
+    """Retry all waiting requests in their original queue order."""
+
+    waiting_requests = request_queue.drain()
+
+    for request in waiting_requests:
+        trip = schedule_request(
+            request=request,
+            vehicles=vehicles,
+            charging_stations=charging_stations,
+            event_queue=event_queue,
+            current_time=current_time,
+        )
+
+        if trip is None:
+            request_queue.add(request)
+        else:
+            print(
+                f"Waiting request {request.request_id} assigned to "
+                f"vehicle {trip.vehicle_id} at time {current_time}."
+            )
+            print(f"Scheduled completion time: {trip.completion_time}")

@@ -6,11 +6,13 @@ from fleet_sim.models import (
     PassengerRequest,
     Vehicle,
 )
+from fleet_sim.request_queue import RequestQueue
 from fleet_sim.scheduling import (
     assign_trip,
     calculate_trip_duration,
     complete_ready_trips,
     complete_scheduled_trip,
+    retry_waiting_requests,
     schedule_request,
     schedule_trip,
 )
@@ -312,3 +314,191 @@ def test_schedule_request_uses_another_vehicle_when_first_is_busy() -> None:
     assert requests[1].status == "assigned"
 
     assert len(queue) == 2
+
+
+def test_retry_waiting_requests_assigns_request_when_vehicle_is_available() -> None:
+    vehicles = [
+        Vehicle(
+            vehicle_id=1,
+            x=0,
+            y=0,
+            battery=100,
+        ),
+    ]
+
+    request = PassengerRequest(
+        request_id=1,
+        pickup_x=1,
+        pickup_y=0,
+        dropoff_x=3,
+        dropoff_y=0,
+        arrival_time=0,
+    )
+
+    charging_stations = [
+        ChargingStation(
+            station_id=1,
+            x=4,
+            y=0,
+            charging_rate=5,
+            total_ports=2,
+        ),
+    ]
+
+    request_queue = RequestQueue()
+    event_queue = EventQueue()
+
+    request_queue.add(request)
+
+    retry_waiting_requests(
+        request_queue=request_queue,
+        vehicles=vehicles,
+        charging_stations=charging_stations,
+        event_queue=event_queue,
+        current_time=5,
+    )
+
+    assert request_queue.is_empty()
+    assert request.status == "assigned"
+    assert vehicles[0].status == "with_passenger"
+    assert len(event_queue) == 1
+
+    def test_retry_waiting_requests_keeps_unserviceable_request_waiting() -> None:
+        vehicles = [
+            Vehicle(
+                vehicle_id=1,
+                x=0,
+                y=0,
+                battery=1,
+            ),
+        ]
+
+        request = PassengerRequest(
+            request_id=1,
+            pickup_x=5,
+            pickup_y=0,
+            dropoff_x=10,
+            dropoff_y=0,
+            arrival_time=0,
+        )
+
+        charging_stations = [
+            ChargingStation(
+                station_id=1,
+                x=11,
+                y=0,
+                charging_rate=5,
+                total_ports=2,
+            ),
+        ]
+
+        request_queue = RequestQueue()
+        event_queue = EventQueue()
+
+        request_queue.add(request)
+
+        retry_waiting_requests(
+            request_queue=request_queue,
+            vehicles=vehicles,
+            charging_stations=charging_stations,
+            event_queue=event_queue,
+            current_time=5,
+        )
+
+        assert len(request_queue) == 1
+        assert request.status == "waiting"
+        assert vehicles[0].status == "idle"
+        assert event_queue.is_empty()
+
+
+def test_waiting_request_is_assigned_after_vehicle_completes() -> None:
+    vehicles = [
+        Vehicle(
+            vehicle_id=1,
+            x=0,
+            y=0,
+            battery=100,
+        ),
+    ]
+
+    requests = [
+        PassengerRequest(
+            request_id=1,
+            pickup_x=1,
+            pickup_y=0,
+            dropoff_x=5,
+            dropoff_y=0,
+            arrival_time=0,
+        ),
+        PassengerRequest(
+            request_id=2,
+            pickup_x=5,
+            pickup_y=0,
+            dropoff_x=7,
+            dropoff_y=0,
+            arrival_time=2,
+        ),
+    ]
+
+    charging_stations = [
+        ChargingStation(
+            station_id=1,
+            x=8,
+            y=0,
+            charging_rate=5,
+            total_ports=2,
+        ),
+    ]
+
+    event_queue = EventQueue()
+    request_queue = RequestQueue()
+
+    first_trip = schedule_request(
+        request=requests[0],
+        vehicles=vehicles,
+        charging_stations=charging_stations,
+        event_queue=event_queue,
+        current_time=0,
+    )
+
+    assert first_trip is not None
+    assert first_trip.completion_time == 5
+
+    second_trip = schedule_request(
+        request=requests[1],
+        vehicles=vehicles,
+        charging_stations=charging_stations,
+        event_queue=event_queue,
+        current_time=2,
+    )
+
+    assert second_trip is None
+
+    request_queue.add(requests[1])
+
+    complete_ready_trips(
+        event_queue=event_queue,
+        current_time=5,
+        vehicles=vehicles,
+        requests=requests,
+    )
+
+    retry_waiting_requests(
+        request_queue=request_queue,
+        vehicles=vehicles,
+        charging_stations=charging_stations,
+        event_queue=event_queue,
+        current_time=5,
+    )
+
+    assert request_queue.is_empty()
+    assert requests[0].status == "completed"
+    assert requests[1].status == "assigned"
+    assert vehicles[0].status == "with_passenger"
+    assert len(event_queue) == 1
+
+    next_trip = event_queue.peek()
+
+    assert next_trip.request_id == 2
+    assert next_trip.start_time == 5
+    assert next_trip.completion_time == 7

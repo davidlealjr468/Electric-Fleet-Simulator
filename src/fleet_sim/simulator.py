@@ -2,7 +2,12 @@
 
 from fleet_sim.event_queue import EventQueue
 from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
-from fleet_sim.scheduling import complete_ready_trips, schedule_request
+from fleet_sim.request_queue import RequestQueue
+from fleet_sim.scheduling import (
+    complete_ready_trips,
+    retry_waiting_requests,
+    schedule_request,
+)
 
 
 def main() -> None:
@@ -56,6 +61,14 @@ def main() -> None:
             dropoff_y=-3,
             arrival_time=4,
         ),
+        PassengerRequest(
+            request_id=4,
+            pickup_x=0,
+            pickup_y=1,
+            dropoff_x=3,
+            dropoff_y=1,
+            arrival_time=3,
+        ),
     ]
 
     charging_stations = [
@@ -83,6 +96,7 @@ def main() -> None:
     ]
 
     event_queue = EventQueue()
+    request_queue = RequestQueue()
 
     requests.sort(key=lambda request: request.arrival_time)
 
@@ -94,6 +108,14 @@ def main() -> None:
             current_time=current_time,
             vehicles=vehicles,
             requests=requests,
+        )
+
+        retry_waiting_requests(
+            request_queue=request_queue,
+            vehicles=vehicles,
+            charging_stations=charging_stations,
+            event_queue=event_queue,
+            current_time=current_time,
         )
 
         print()
@@ -108,7 +130,9 @@ def main() -> None:
         )
 
         if trip is None:
-            print(f"Request {request.request_id} remains waiting.")
+            request_queue.add(request)
+
+            print(f"Request {request.request_id} added to the waiting queue.")
         else:
             print(
                 f"Request {request.request_id} assigned to vehicle {trip.vehicle_id}."
@@ -125,6 +149,14 @@ def main() -> None:
             requests=requests,
         )
 
+        retry_waiting_requests(
+            request_queue=request_queue,
+            vehicles=vehicles,
+            charging_stations=charging_stations,
+            event_queue=event_queue,
+            current_time=current_time,
+        )
+
     print()
     print("Final simulation state")
 
@@ -139,6 +171,10 @@ def main() -> None:
 
     for request in requests:
         print(f"Request {request.request_id}: status={request.status}")
+
+    if not request_queue.is_empty():
+        print()
+        print(f"{len(request_queue)} request(s) could not be completed.")
 
 
 if __name__ == "__main__":
