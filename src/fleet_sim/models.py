@@ -12,6 +12,9 @@ class Vehicle:
     y: int
     battery: int
     status: str = "idle"  # Possible statuses: idle, to_charger, charging, stranded
+    available_time: int = (
+        0  # Time when the vehicle will be available for the next request
+    )
 
 
 @dataclass
@@ -23,6 +26,7 @@ class PassengerRequest:
     pickup_y: int
     dropoff_x: int
     dropoff_y: int
+    arrival_time: int = 0
     status: str = "waiting"
 
 
@@ -55,3 +59,16 @@ class ChargingStation:
             raise ValueError("No occupied charging ports can be released")
 
         self.occupied_ports -= 1
+
+
+@dataclass
+class ScheduledTrip:
+    """Represent a passenger trip scheduled to finish in the future."""
+
+    vehicle_id: int
+    request_id: int
+    start_time: int
+    completion_time: int
+    final_x: int
+    final_y: int
+    battery_used: int

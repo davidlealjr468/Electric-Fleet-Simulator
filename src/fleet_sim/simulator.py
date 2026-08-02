@@ -1,11 +1,16 @@
 """Base electric fleet simulator."""
 
-from fleet_sim.models import ChargingStation, PassengerRequest, Vehicle
-from fleet_sim.request_processing import process_request
+from fleet_sim.event_queue import EventQueue
+from fleet_sim.models import ChargingStation, PassengerRequest, ScheduledTrip, Vehicle
+from fleet_sim.scheduling import (
+    complete_ready_trips,
+    schedule_request,
+)
 
 
 def main() -> None:
     """Run the base electric fleet simulation."""
+    event_queue = EventQueue()
     current_time = 0
 
     vehicles = [
@@ -36,6 +41,7 @@ def main() -> None:
             pickup_y=6,
             dropoff_x=-8,
             dropoff_y=7,
+            arrival_time=0,
         ),
         PassengerRequest(
             request_id=2,
@@ -43,6 +49,7 @@ def main() -> None:
             pickup_y=3,
             dropoff_x=5,
             dropoff_y=1,
+            arrival_time=10,
         ),
         PassengerRequest(
             request_id=3,
@@ -50,6 +57,7 @@ def main() -> None:
             pickup_y=4,
             dropoff_x=1,
             dropoff_y=-2,
+            arrival_time=35,
         ),
     ]
 
@@ -77,16 +85,71 @@ def main() -> None:
         ),
     ]
 
-    for request in requests:
-        print()
-        print(f"Processing request {request.request_id}")
+    ScheduledTrip(
+        vehicle_id=2,
+        request_id=1,
+        start_time=0,
+        completion_time=19,
+        final_x=-8,
+        final_y=7,
+        battery_used=19,
+    )
 
-        current_time = process_request(
-            request,
-            vehicles,
-            charging_stations,
-            current_time,
+    requests.sort(key=lambda request: request.arrival_time)
+
+    for request in requests:
+        current_time = request.arrival_time
+
+        complete_ready_trips(
+            event_queue=event_queue,
+            current_time=current_time,
+            vehicles=vehicles,
+            requests=requests,
         )
+
+        print()
+        print(f"Processing request {request.request_id} at time {current_time}")
+
+        trip = schedule_request(
+            request=request,
+            vehicles=vehicles,
+            charging_stations=charging_stations,
+            event_queue=event_queue,
+            current_time=current_time,
+        )
+
+        if trip is None:
+            print(f"Request {request.request_id} remains waiting.")
+        else:
+            print(
+                f"Request {request.request_id} assigned to vehicle {trip.vehicle_id}."
+            )
+            print(f"Scheduled completion time: {trip.completion_time}")
+
+    while not event_queue.is_empty():
+        current_time = event_queue.peek().completion_time
+
+        complete_ready_trips(
+            event_queue=event_queue,
+            current_time=current_time,
+            vehicles=vehicles,
+            requests=requests,
+        )
+
+    print()
+    print("Final simulation state")
+
+    for vehicle in vehicles:
+        print(
+            f"Vehicle {vehicle.vehicle_id}: "
+            f"position=({vehicle.x}, {vehicle.y}), "
+            f"battery={vehicle.battery}, "
+            f"status={vehicle.status}, "
+            f"available_time={vehicle.available_time}"
+        )
+
+    for request in requests:
+        print(f"Request {request.request_id}: status={request.status}")
 
 
 if __name__ == "__main__":
