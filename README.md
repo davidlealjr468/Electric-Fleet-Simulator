@@ -1,160 +1,415 @@
 # Electric Fleet Simulator
 
+[![CI](https://github.com/davidlealjr468/Electric-Fleet-Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/davidlealjr468/Electric-Fleet-Simulator/actions)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://www.python.org/)
+[![Tests](https://img.shields.io/badge/tests-45%20passing-brightgreen)](#testing)
+[![License](https://img.shields.io/badge/license-not%20specified-lightgrey)](#license)
+
+An event-driven Python simulator for studying electric vehicle fleet operations, including passenger demand, vehicle dispatch, battery feasibility, charging infrastructure, concurrent trips, and waiting-request behavior.
+
 ## Overview
 
-The Electric Fleet Simulator is a Python-based simulation project for modeling the operation of electric transportation fleets.
+The simulator models a fleet of electric vehicles operating on a two-dimensional Manhattan grid.
 
-The simulator evaluates how electric vehicles:
+Passenger requests arrive at specific simulation times. The system assigns each request to the nearest feasible vehicle while accounting for:
 
-- travel across a grid,
-- serve passenger requests,
-- consume battery energy,
-- determine whether trips are feasible,
-- select charging stations,
-- recharge when battery levels are low,
-- and transition between operational states.
+- vehicle availability,
+- vehicle status,
+- distance to the passenger,
+- trip distance,
+- remaining battery,
+- and access to a charging station after drop-off.
 
-The project is being developed incrementally to explore simulation architecture, electric-vehicle fleet operations, optimization algorithms, pathfinding, automated testing, performance analysis, and data-driven validation.
-
-The long-term goal is to create a configurable fleet simulation platform capable of comparing vehicle-assignment, routing, charging, and repositioning strategies.
-
----
-
-## Current Timeline
-
-### Version 1 — Core Vehicle Simulation
-
-1. **[Completed]** Create a two-dimensional grid-based simulation
-2. **[Completed]** Implement Manhattan-distance calculations
-3. **[Completed]** Add vehicle movement and simulation-time tracking
-4. **[Completed]** Add battery consumption during movement
-5. **[Completed]** Add passenger pickup and drop-off locations
-6. **[Completed]** Add trip battery-feasibility calculations
-7. **[Completed]** Add vehicle charging behavior
-8. **[Completed]** Add multiple charging stations
-9. **[Completed]** Select the nearest charging station
-10. **[Completed]** Add charging-station input validation
-11. **[Completed]** Add automated tests with `pytest`
-12. **[Completed]** Split the simulator into focused Python modules
-13. **[Completed]** Add a reusable `Vehicle` dataclass
-14. **[Completed]** Update vehicle movement to operate on the `Vehicle` model
-15. **[Completed]** Add a `PassengerRequest` dataclass
-16. **[In Progress]** Integrate passenger-request state throughout the simulator
-
-### Version 2 — Multi-Vehicle Fleet Operations
-
-1. **[Planned]** Add a `ChargingStation` dataclass
-2. **[Planned]** Support multiple vehicles
-3. **[Planned]** Support multiple passenger requests
-4. **[Planned]** Add vehicle-to-request assignment
-5. **[Planned]** Track request waiting times
-6. **[Planned]** Add rejected and cancelled request states
-7. **[Planned]** Add charging-station capacity
-8. **[Planned]** Add charging queues
-9. **[Planned]** Add fleet-level operational metrics
-10. **[Planned]** Save structured simulation event logs
-
-### Version 3 — Routing and Optimization
-
-1. **[Planned]** Add road obstacles and restricted grid cells
-2. **[Planned]** Represent the road network as a graph
-3. **[Planned]** Implement Dijkstra’s shortest-path algorithm
-4. **[Planned]** Implement A* pathfinding
-5. **[Planned]** Compare pathfinding runtime and solution quality
-6. **[Planned]** Add weighted travel costs
-7. **[Planned]** Add traffic-aware routing
-8. **[Planned]** Add energy-aware route planning
-9. **[Planned]** Add fleet repositioning strategies
-10. **[Planned]** Compare greedy and optimization-based assignment methods
-
-### Version 4 — Data, Analysis, and Validation
-
-1. **[Planned]** Load simulation scenarios from configuration files
-2. **[Planned]** Load vehicle, request, and station data from CSV files
-3. **[Planned]** Generate random passenger demand
-4. **[Planned]** Add reproducible simulation seeds
-5. **[Planned]** Run Monte Carlo experiments
-6. **[Planned]** Analyze passenger waiting-time distributions
-7. **[Planned]** Analyze battery and charging behavior
-8. **[Planned]** Compare fleet policies statistically
-9. **[Planned]** Profile runtime and memory consumption
-10. **[Planned]** Validate the simulator against transportation datasets
-
----
+Multiple vehicles can operate concurrently. When every suitable vehicle is busy, the passenger request enters a first-in, first-out waiting queue and is retried when a vehicle becomes available.
 
 ## Current Capabilities
 
-The current simulator supports:
+### Fleet operations
 
-- one electric vehicle,
-- one passenger request,
-- multiple charging stations,
-- grid-based vehicle movement,
-- Manhattan-distance calculations,
-- simulation-time tracking,
-- battery consumption,
-- passenger-trip feasibility checks,
-- nearest charging-station selection,
-- low-battery routing,
-- configurable charging rates,
-- configurable charging targets,
-- stranded-vehicle detection,
-- vehicle and passenger state models,
-- automated unit tests,
-- formatting and linting,
-- continuous integration.
+- Multiple electric vehicles
+- Multiple passenger requests
+- Request arrival times
+- Concurrent vehicle assignments
+- Vehicle availability tracking
+- Passenger waiting queue
+- Automatic retrying of waiting requests
+- Final vehicle and request state reporting
 
----
+### Vehicle selection
+
+The selected vehicle must:
+
+1. Be idle
+2. Be available at the current simulation time
+3. Have enough battery to reach the pickup
+4. Have enough battery to complete the passenger trip
+5. Have enough remaining battery to reach a charging station
+
+Among all feasible vehicles, the nearest one is selected.
+
+### Event-driven scheduling
+
+Trips are represented as future events rather than being completed immediately.
+
+The simulator uses:
+
+- `heapq` for completion-time event ordering
+- `deque` for first-in, first-out passenger waiting
+- scheduled trip start and completion times
+- automatic processing of completed trips
+
+### Charging infrastructure
+
+- Multiple charging stations
+- Configurable charging rates
+- Charging-port capacity
+- Port occupancy tracking
+- Nearest-station selection
+- Charging input validation
+
+Charging behavior exists in the project, but full charging-event integration with the main event scheduler is still under development.
+
+## Example Simulation
+
+```text
+Processing request 1 at time 0
+Request 1 assigned to vehicle 1.
+Scheduled completion time: 6
+
+Processing request 2 at time 2
+Request 2 assigned to vehicle 2.
+Scheduled completion time: 9
+
+Processing request 4 at time 3
+Request 4 assigned to vehicle 3.
+Scheduled completion time: 15
+
+Processing request 3 at time 4
+Request 3 added to the waiting queue.
+
+Waiting request 3 assigned to vehicle 1 at time 6.
+Scheduled completion time: 33
+```
+
+This example demonstrates three vehicles working concurrently while a fourth passenger waits until a vehicle becomes available.
 
 ## Simulation Flow
 
-The simulator first determines the nearest charging station and calculates the energy required to:
+```text
+Passenger request arrives
+          |
+          v
+Complete trips ready by the current time
+          |
+          v
+Retry passengers already waiting
+          |
+          v
+Find nearest feasible vehicle
+       /       \
+      /         \
+Vehicle found   No vehicle available
+     |                  |
+     v                  v
+Assign trip       Add request to queue
+     |
+     v
+Schedule future completion event
+     |
+     v
+Vehicle remains busy
+     |
+     v
+Completion event is processed
+     |
+     v
+Vehicle returns to idle
+     |
+     v
+Retry waiting requests
+```
 
-1. reach the passenger,
-2. complete the passenger trip,
-3. reach a charging station afterward.
+## Project Structure
 
 ```text
-Vehicle starts idle
-        |
-        v
-Find nearest charging station
-        |
-        v
-Calculate total required battery
-        |
-        v
-Can the vehicle safely complete the trip?
-       / \
-     Yes  No
-      |    |
-      |    v
-      |  Can the vehicle reach a charger?
-      |        / \
-      |      Yes  No
-      |       |    |
-      |       |    v
-      |       |  Vehicle becomes stranded
-      |       v
-      |   Travel to charging station
-      |       |
-      |       v
-      |   Charge to target level
-      |       |
-      |       v
-      |   Return to idle
-      |
-      v
-Travel to passenger
-      |
-      v
-Pick up passenger
-      |
-      v
-Travel to drop-off
-      |
-      v
-Complete request
-      |
-      v
-Return to idle
+Electric-Fleet-Simulator/
+├── .github/
+│   └── workflows/           # Continuous integration
+├── analysis/                # Analysis work
+├── benchmarks/              # Performance benchmarks
+├── configs/                 # Future simulation configurations
+├── data/                    # Scenario and input data
+├── docs/                    # Project documentation
+├── src/
+│   └── fleet_sim/
+│       ├── __init__.py
+│       ├── __main__.py
+│       ├── charging.py
+│       ├── distance.py
+│       ├── event_queue.py
+│       ├── models.py
+│       ├── movement.py
+│       ├── request_processing.py
+│       ├── request_queue.py
+│       ├── scheduling.py
+│       ├── selection.py
+│       └── simulator.py
+├── tests/
+│   ├── test_charging.py
+│   ├── test_distance.py
+│   ├── test_event_queue.py
+│   ├── test_models.py
+│   ├── test_movement.py
+│   ├── test_request_processing.py
+│   ├── test_request_queue.py
+│   ├── test_scheduling.py
+│   └── test_selection.py
+├── pyproject.toml
+├── requirements-dev.txt
+└── README.md
+```
+
+## Core Models
+
+### `Vehicle`
+
+Stores:
+
+- vehicle ID,
+- current position,
+- battery level,
+- operating status,
+- and next available time.
+
+### `PassengerRequest`
+
+Stores:
+
+- request ID,
+- pickup location,
+- drop-off location,
+- arrival time,
+- and request status.
+
+### `ChargingStation`
+
+Stores:
+
+- station ID,
+- location,
+- charging rate,
+- total ports,
+- and occupied ports.
+
+### `ScheduledTrip`
+
+Stores:
+
+- assigned vehicle,
+- passenger request,
+- start time,
+- completion time,
+- destination,
+- and battery usage.
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/davidlealjr468/Electric-Fleet-Simulator.git
+cd Electric-Fleet-Simulator
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Activate it on Linux, macOS, or WSL:
+
+```bash
+source .venv/bin/activate
+```
+
+Activate it on Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### 3. Install the project
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -e .
+```
+
+Install the development tools:
+
+```bash
+python -m pip install -r requirements-dev.txt
+```
+
+## Running the Simulator
+
+```bash
+python -m fleet_sim
+```
+
+The terminal output displays:
+
+- request arrival times,
+- immediate vehicle assignments,
+- waiting-queue activity,
+- scheduled completion times,
+- final vehicle states,
+- and final passenger-request states.
+
+## Testing
+
+Run the complete test suite:
+
+```bash
+pytest
+```
+
+Run with explicit verbose output:
+
+```bash
+pytest -v
+```
+
+Run one test module:
+
+```bash
+pytest tests/test_scheduling.py -v
+```
+
+The current suite covers:
+
+- charging,
+- Manhattan distance,
+- event ordering,
+- data models,
+- vehicle movement,
+- passenger request processing,
+- request queues,
+- trip scheduling,
+- and vehicle selection.
+
+## Code Quality
+
+Format the code:
+
+```bash
+ruff format .
+```
+
+Run lint checks:
+
+```bash
+ruff check .
+```
+
+Run the full local verification workflow:
+
+```bash
+ruff format .
+ruff check .
+pytest
+python -m fleet_sim
+```
+
+GitHub Actions provides continuous integration for repository changes.
+
+## Architecture
+
+The project separates simulation responsibilities into focused modules:
+
+| Module | Responsibility |
+|---|---|
+| `models.py` | Fleet data models |
+| `distance.py` | Manhattan-distance calculations |
+| `movement.py` | Grid-based vehicle movement |
+| `charging.py` | Battery charging behavior |
+| `selection.py` | Vehicle and station selection |
+| `request_processing.py` | Sequential passenger-trip processing |
+| `scheduling.py` | Event-based trip assignment and completion |
+| `event_queue.py` | Completion-time priority queue |
+| `request_queue.py` | FIFO waiting-passenger queue |
+| `simulator.py` | Main simulation scenario and event loop |
+
+## Development Roadmap
+
+### Completed
+
+- [x] Two-dimensional grid simulation
+- [x] Manhattan-distance calculations
+- [x] Vehicle battery consumption
+- [x] Passenger pickup and drop-off
+- [x] Multiple vehicles
+- [x] Multiple passenger requests
+- [x] Request arrival times
+- [x] Vehicle assignment
+- [x] Concurrent trips
+- [x] Event-based trip scheduling
+- [x] Vehicle availability tracking
+- [x] Passenger waiting queue
+- [x] Automatic request retries
+- [x] Multiple charging stations
+- [x] Charging-port capacity
+- [x] Automated tests
+- [x] Continuous integration
+
+### In progress
+
+- [ ] Integrate charging into the event scheduler
+- [ ] Route low-battery vehicles to charging stations
+- [ ] Add charging-station waiting queues
+- [ ] Improve simulation logging
+
+### Planned
+
+- [ ] Passenger waiting-time metrics
+- [ ] Vehicle utilization metrics
+- [ ] Fleet energy-consumption metrics
+- [ ] Configuration-file loading
+- [ ] CSV scenario loading
+- [ ] Random passenger-demand generation
+- [ ] Reproducible simulation seeds
+- [ ] Road-network graph representation
+- [ ] Dijkstra and A* routing
+- [ ] Traffic-aware routing
+- [ ] Fleet repositioning
+- [ ] Policy comparison and optimization
+- [ ] Monte Carlo experiments
+- [ ] Visualization and 3D-engine integration
+
+## Current Limitations
+
+- The environment is a simplified two-dimensional grid.
+- Distance is calculated using Manhattan distance.
+- Vehicles move at one grid unit per simulation-time unit.
+- Traffic and road restrictions are not modeled.
+- Charging is not yet a first-class event in the main scheduler.
+- Requests that are permanently infeasible remain waiting.
+- Visualization is paused while the simulation core is developed.
+
+## Project Goal
+
+The long-term goal is to create a configurable simulation platform for comparing electric-fleet strategies involving:
+
+- dispatch,
+- routing,
+- charging,
+- passenger waiting,
+- repositioning,
+- fleet sizing,
+- energy usage,
+- and operational performance.
+
+## License
+
+A license has not yet been added to this repository.
