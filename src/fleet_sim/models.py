@@ -72,3 +72,14 @@ class ScheduledTrip:
     final_x: int
     final_y: int
     battery_used: int
+
+
+@dataclass
+class ScheduledCharge:
+    """Represent a vehicle charging session scheduled to finish later."""
+
+    vehicle_id: int
+    station_id: int
+    start_time: int
+    completion_time: int
+    battery_charged: int

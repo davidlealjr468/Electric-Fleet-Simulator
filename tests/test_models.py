@@ -2,7 +2,7 @@
 
 import pytest
 
-from fleet_sim.models import ChargingStation, ScheduledTrip
+from fleet_sim.models import ChargingStation, ScheduledCharge, ScheduledTrip
 
 
 def test_charging_station_occupies_and_releases_port() -> None:
@@ -83,3 +83,19 @@ def test_scheduled_trip_stores_future_completion() -> None:
     assert trip.final_x == -8
     assert trip.final_y == 7
     assert trip.battery_used == 19
+
+
+def test_scheduled_charge_stores_future_completion() -> None:
+    charge = ScheduledCharge(
+        vehicle_id=1,
+        station_id=2,
+        start_time=10,
+        completion_time=18,
+        battery_charged=80,
+    )
+
+    assert charge.vehicle_id == 1
+    assert charge.station_id == 2
+    assert charge.start_time == 10
+    assert charge.completion_time == 18
+    assert charge.battery_charged == 80
