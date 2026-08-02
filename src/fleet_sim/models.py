@@ -82,4 +82,7 @@ class ScheduledCharge:
     station_id: int
     start_time: int
     completion_time: int
-    battery_charged: int
+    target_battery: int
+
+
+SimulationEvent = ScheduledTrip | ScheduledCharge

@@ -3,7 +3,7 @@
 import pytest
 
 from fleet_sim.event_queue import EventQueue
-from fleet_sim.models import ScheduledTrip
+from fleet_sim.models import ScheduledCharge, ScheduledTrip
 
 
 def make_trip(
@@ -109,3 +109,34 @@ def test_event_queue_includes_trip_completed_at_current_time() -> None:
     assert len(ready_trips) == 1
     assert ready_trips[0].request_id == 1
     assert queue.is_empty()
+
+
+def test_event_queue_orders_trip_and_charge_events() -> None:
+    queue = EventQueue()
+
+    trip = ScheduledTrip(
+        vehicle_id=1,
+        request_id=1,
+        start_time=0,
+        completion_time=12,
+        final_x=5,
+        final_y=5,
+        battery_used=10,
+    )
+
+    charge = ScheduledCharge(
+        vehicle_id=2,
+        station_id=1,
+        start_time=0,
+        completion_time=8,
+        target_battery=80,
+    )
+
+    queue.push(trip)
+    queue.push(charge)
+
+    first_event = queue.pop()
+    second_event = queue.pop()
+
+    assert first_event is charge
+    assert second_event is trip
