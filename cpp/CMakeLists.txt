@@ -1,6 +1,7 @@
 add_library(
     electric_fleet_core
     src/Vehicle.cpp
+    src/ChargingStation.cpp
 )
 
 target_include_directories(
@@ -63,6 +64,7 @@ if(FLEET_SIM_BUILD_TESTS)
     add_executable(
         fleet_cpp_tests
         tests/test_vehicle.cpp
+        tests/test_charging_station.cpp
     )
 
     target_link_libraries(
