@@ -1,0 +1,59 @@
+name: C++ CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "cpp/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/cpp-ci.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "cpp/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/cpp-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Configure CMake
+        run: >
+          cmake
+          -S .
+          -B build
+          -DFLEET_SIM_BUILD_TESTS=ON
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        run: ctest --test-dir build --build-config Release --output-on-failure
+
+      - name: Run CLI on Linux
+        if: runner.os == 'Linux'
+        run: ./build/cpp/fleet_cli
+
+      - name: Run CLI on Windows
+        if: runner.os == 'Windows'
+        run: .\build\cpp\Release\fleet_cli.exe
